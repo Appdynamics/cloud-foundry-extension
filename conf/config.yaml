@@ -1,0 +1,59 @@
+#
+# JMX Service Properties
+# if authenticate = 1 (true), username and password are required.
+#
+
+jmxService:
+    jmxServiceUrl : service:jmx:rmi:///jndi/rmi://localhost:8686/jmxrmi
+    authenticate : 1
+    username : admin
+    password : admin
+    maxParallelConnection : 10
+ 
+#   
+# mbean domains to consider
+#
+
+domains:
+ - org.cloudfoundry
+
+#
+# Based on this parameter, it will be decided whether to fetch the specified jobs/attributes OR ignore the specified jobs/attributes
+# 1 = required, 0 = ignored
+#
+
+requiredOrIgnored : 1
+
+#
+# JMX mbeans objects Cloud Foundry jobs required/ignored
+#
+
+jobs:
+- etcd_and_metrics
+- CloudController
+
+#
+# JMX Attributes required/ignored
+#
+
+attributes:
+- system.disk.ephemeral.percent
+- system.mem.kb
+- system.disk.ephemeral.inode_percent
+- uptime_in_seconds
+- cpu_load_avg
+- cc.http_status.3XX
+- log_count[level=warn]
+
+#
+#prefix used to show up metrics in AppDynamics
+#
+
+metricPrefix:  "Custom Metrics|CF|"
+
+
+#
+# Frequency in Minutes at which the configurations will be read again
+#
+
+domainRefreshTimeInMins: 10

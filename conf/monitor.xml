@@ -1,0 +1,22 @@
+<monitor>
+    <name>CloudFoundryMonitor</name>
+    <type>managed</type>
+    <description>Cloud Foundry Extension</description>
+    <monitor-configuration></monitor-configuration>
+    <monitor-run-task>
+        <execution-style>periodic</execution-style>
+        <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+        <name>Cloud Foundry Run task</name>
+        <display-name>Cloud Foundry Run task</display-name>
+        <description>Cloud Foundry Run task</description>
+        <type>java</type>
+        <execution-timeout-in-secs>20</execution-timeout-in-secs>
+        <task-arguments>
+            <argument name="config-file" is-required="true" default-value="C:\eclipse\workspace\cloud-foundry-pivotal-extension\target\cloud-foundry\config.yaml" />
+        </task-arguments>
+        <java-task>
+            <classpath>cloud-foundry-extension.jar</classpath>
+            <impl-class>com.appdynamics.extensions.cloudfoundry.CloudFoundryExtension</impl-class>
+        </java-task>
+    </monitor-run-task>
+</monitor>
