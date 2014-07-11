@@ -3,7 +3,7 @@ Cloud-Foundry-monitoring-extension
 
 An AppDynamics extension to be used with a stand alone Java machine agent to provide metrics from Pivotal Cloud Foundry.
 
-## Use Case
+### Use Case
 
 Pivotal Cloud Foundry is PaaS infrastructure software. The Cloud Foundry monitoring extension captures metrics exposed by Pivotal CF JMX server and displays them in the AppDynamics Metric Browser.
 
@@ -12,19 +12,19 @@ Pivotal Cloud Foundry is PaaS infrastructure software. The Cloud Foundry monitor
 Make sure that the Pivotal CF JMX server has enabled remote access to JMX Mbeans.
 The machine where the machine agent runs (with this monitoring extension) has access to the Pivotal CF JMX server.
 
-## Metrics Provided
+### Metrics Provided
  
 Various CF job related metrics available via JMX mbean.
 
 Note : By default, a Machine agent or a AppServer agent can send a fixed number of metrics to the controller. To change this limit, please follow the instructions mentioned here.
  
-## Installation
+### Installation
  
 1. Run "mvn clean install" and find the CloudFoundryMonitor.zip file in the "target" folder. You can also download the CloudFoundryMonitor.zip from AppDynamics Exchange.
 
 2. Unzip as "CloudFoundryMonitor" and copy the "CloudFoundryMonitor" directory to `<MACHINE_AGENT_HOME>/monitors`
  
-## Configuration
+### Configuration
  
 Note : Please make sure to not use tab (\t) while editing yaml files. You may want to validate the yaml file using a yaml validator
  
@@ -46,7 +46,7 @@ Note : Please make sure to not use tab (\t) while editing yaml files. You may wa
 ....
 </task-arguments>
  
-## Multiple Pivotal CF JMX instances/end points:
+### Multiple Pivotal CF JMX instances/end points:
  
 1. Make sure you have a separate machine agent installed and it has CloudFoundry Extension running which is pointing to each of the Pivotal CF JMX server instance or endpoint. 
  
@@ -54,11 +54,11 @@ Note : Please make sure to not use tab (\t) while editing yaml files. You may wa
  
 3. Make sure that in every node, the <MACHINE_AGENT_HOME>/monitors/CloudFoundryMonitor/config.yaml should emit the same metric path, so that metrics reported by each of the nodes are aggregated at tier level.
  
-## Contributing
+### Contributing
  
 Find out more in the [AppSphere](http://community.appdynamics.com/t5/AppDynamics-eXchange/Cloud-Foundry-Monitoring-Extension/idi-p/9428) community.
  
-##Support
+### Support
 
 For any questions or feature request, please contact [AppDynamics Center of Excellence](mailto:ace-request@appdynamics.com).
 
