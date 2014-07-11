@@ -16,7 +16,9 @@ The machine where the machine agent runs (with this monitoring extension) has ac
  
 Various CF job related metrics available via JMX mbean.
 
-Note : By default, a Machine agent or a AppServer agent can send a fixed number of metrics to the controller. To change this limit, please follow the instructions mentioned here.
+Note : By default, a Machine agent or a AppServer agent can send a fixed number of metrics to the controller. To change this limit, please follow the instructions mentioned here
+
+http://docs.appdynamics.com/display/PRO14S/Metrics+Limits
  
 ### Installation
  
