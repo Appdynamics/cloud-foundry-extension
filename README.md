@@ -39,12 +39,7 @@ Note : Please make sure to not use tab (\t) while editing yaml files. You may wa
 5. Sample config.yaml file is available in <MACHINE_AGENT_HOME>/monitors/CloudFoundryMonitor/
 
 6. Configure the path to the config.yaml file by editing the <task-arguments> in the monitor.xml file in the `<MACHINE_AGENT_HOME>/monitors/CloudFoundryMonitor/` directory. Below is the sample
- 
-<task-arguments>
-<!-- config file-->
-<argument name="config-file" is-required="true" default-value="monitors/CloudFoundryMonitor/config.yaml" />
-....
-</task-arguments>
+default-value="monitors/CloudFoundryMonitor/config.yaml"
  
 ### Multiple Pivotal CF JMX instances/end points:
  
