@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.appdynamics.extensions</groupId>
 	<artifactId>cloud-foundry-extension</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 
 	<name>cloud-foundry-extension</name>
 	<url>http://maven.apache.org</url>
@@ -139,5 +139,9 @@
 			<url>https://github.com/Appdynamics/maven-repo/raw/master/releases</url>
 		</repository>
 	</repositories>
+	<scm>
+		<connection>scm:git:https://github.com/Appdynamics/cloud-foundry-extension.git</connection>
+	</scm>
+	
 
 </project>

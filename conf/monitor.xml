@@ -12,7 +12,7 @@
         <type>java</type>
         <execution-timeout-in-secs>20</execution-timeout-in-secs>
         <task-arguments>
-            <argument name="config-file" is-required="true" default-value="C:\eclipse\workspace\cloud-foundry-pivotal-extension\target\cloud-foundry\config.yaml" />
+            <argument name="config-file" is-required="true" default-value="monitors/CloudFoundryMonitor/config.yaml" />
         </task-arguments>
         <java-task>
             <classpath>cloud-foundry-extension.jar</classpath>
