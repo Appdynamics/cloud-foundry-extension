@@ -2,9 +2,6 @@ package com.appdynamics.extensions.cloudfoundry.utils;
 
 import java.io.File;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.appdynamics.extensions.PathResolver;
 import com.google.common.base.Strings;
 
@@ -13,19 +10,20 @@ import com.google.common.base.Strings;
  *
  */
 public class CfUtility {
-	
-	private static Logger logger = LoggerFactory.getLogger(CfUtility.class);
 
-	public static boolean isNumeric(Object obj)	{  
-		if(obj == null) return false;
-		String str = obj.toString();
-		try {  
-			Double.parseDouble(str);  
-		} catch(NumberFormatException nfe) {  
-			logger.debug("Object {} is not a number", obj);
-			return false;  
-		}  
-		return true;  
+	/**
+     * Currently, appD controller only supports Integer values. This function will round all the decimals into integers and convert them into strings.
+     * @param attribute
+     * @return
+     */
+	public static String convertMetricValuesToString(Object attribute) {
+		if(attribute instanceof Double){
+			return String.valueOf(Math.round((Double) attribute));
+		}
+		else if(attribute instanceof Float){
+			return String.valueOf(Math.round((Float) attribute));
+		}
+		return attribute.toString();
 	}
 	
 	public static File getConfigFile(String filename) {

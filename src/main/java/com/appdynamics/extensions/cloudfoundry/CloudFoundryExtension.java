@@ -112,7 +112,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 		if(this.startThreads){
 			this.startJMXThreads();
 		}else{
-			logger.debug("No running any threads as startThreads = {}", this.startThreads);
+			logger.debug("Not running any threads as startThreads = {}", this.startThreads);
 		}
 
 		this.startDomainRefreshingThread(this);
@@ -285,7 +285,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 					}
 				}else if(config.getRequiredOrIgnored() == CfConstants.TO_BE_IGNORED){
 					if(config.getAttributes().contains(attribName)){
-						logger.debug("Ignoring attributed object = {}", attribName);
+						logger.debug("Ignoring attribute = {}", attribName);
 						continue;
 					}
 				}								
@@ -303,23 +303,17 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						Attribute attr = (Attribute)attributesList.get(i);
 						String attrName = attr.getName();
 						Object attrValue = attr.getValue();
-
-						if(attrValue == null)
-							logger.debug("JMX Attribute fetched as {} with value null", attrName);
-						else 
+						
+						if (attrValue != null && attrValue instanceof Number) {
 							logger.debug("JMX Attribute fetched as {} = {}", attrName, attrValue);
+							
+							String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + attrName;
+							String metricValue = CfUtility.convertMetricValuesToString(attrValue);
 
-						if(!CfUtility.isNumeric(attrValue)){
-							logger.debug("value for mbean attribute = {} is NULL or not a number, setting it to 0", attrName);
-							attrValue = 0;
-						}
-
-						String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + attrName;
-						String metricValue = attrValue.toString();
-
-						logger.debug(metricPath + " = " + metricValue);
-						this.printMetric(metricPath, metricValue);
-
+							logger.debug(metricPath + " = " + metricValue);
+							this.printMetric(metricPath, metricValue);							
+						}else
+							logger.debug("JMX Attribute[{}={}] fetched having value null or not a number", attrName, attrValue);
 					}
 				}
 			}else{
