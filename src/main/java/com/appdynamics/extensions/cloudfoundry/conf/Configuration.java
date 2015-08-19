@@ -24,6 +24,7 @@ public class Configuration {
 	private List<String> attributes;
 	private List<String> jobs;
 	private List<String> domains;
+	private List<String> deployments;
 	private Integer requiredOrIgnored;
 	private String metricPrefix;
 	private Integer domainRefreshTimeInMins;
@@ -51,6 +52,12 @@ public class Configuration {
 	}
 	public void setDomains(List<String> domains) {
 		this.domains = domains;
+	}
+	public List<String> getDeployments() {
+		return deployments;
+	}
+	public void setDeployments(List<String> deployments) {
+		this.deployments = deployments;
 	}
 	public Integer getRequiredOrIgnored() {
 		return requiredOrIgnored;
@@ -95,6 +102,7 @@ public class Configuration {
 				",attributes=" + this.attributes +
 				",jobs=" + this.jobs +
 				",domains=" + this.domains +
+				",deployments=" + this.deployments +
 				",requiredOrIgnored=" + this.requiredOrIgnored +
 				",domainRefreshTimeInMins=" + this.domainRefreshTimeInMins +
 				",metricPrefix=" + this.metricPrefix + "}";

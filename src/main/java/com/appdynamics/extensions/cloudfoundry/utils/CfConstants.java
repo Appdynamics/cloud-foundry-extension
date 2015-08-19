@@ -9,6 +9,7 @@ public interface CfConstants {
 	
 	public static final String JOB = "job";
 	public static final String INDEX = "index";
+	public static final String DEPLOYMENT = "deployment";
 	
 
 }

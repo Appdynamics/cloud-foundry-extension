@@ -103,6 +103,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 			}catch(Exception exp){
 				logger.error("Error occurred", exp);
 				out = new TaskOutput("Error occurred while executing task");
+				return out;
 			}
 			out = new TaskOutput("Cloud Foundary JMX Initilization successful.");
 		}else{
@@ -150,6 +151,16 @@ public class CloudFoundryExtension extends AManagedMonitor{
 							if(mxbeanName instanceof ObjectName){
 								ObjectName mbeanObject = (ObjectName)mxbeanName;
 
+								String deploymentValue = mbeanObject.getKeyProperty(CfConstants.DEPLOYMENT);
+								if(config.getDeployments() != null && config.getDeployments().size() > 0){
+									if(!config.getDeployments().contains(deploymentValue)){
+										logger.debug("deployment value = {} not found in config, mbean = {}", deploymentValue, mbeanObject.toString());
+									    continue;
+									}else{
+										logger.debug("deployment value = {} found in config, mbean = {}", deploymentValue, mbeanObject.toString());
+									}
+								}
+								
 								String jobValue = mbeanObject.getKeyProperty(CfConstants.JOB);
 								if(config.getRequiredOrIgnored() == CfConstants.REQUIRED){
 									if(!config.getJobs().contains(jobValue)){
@@ -182,7 +193,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 				if(mbeanDomains.isEmpty()){
 					this.startThreads = false;
-					logger.debug("No Cloud Foundry Jobs found to be monitored. Please check required/ignored jobs section in config.yaml");
+					logger.debug("No Cloud Foundry Deployments/Jobs found to be monitored. Please check required/ignored deployments/jobs section in config.yaml");
 				}
 			}
 		}catch(Exception ex){
@@ -197,6 +208,8 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 * 
 	 */
 	private void startJMXThreads(){
+		
+		
 		Integer maxThreads = this.config.getJmxService().getMaxParallelConnection();
 
 		this.maxThreads = (mbeanDomains.size() > maxThreads? maxThreads : mbeanDomains.size());
@@ -251,7 +264,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	}
 
 	/**
-	 * Calls JMX service to retreive attributes and values for the given Mbean object.
+	 * Calls JMX service to retrieve attributes and values for the given Mbean object.
 	 * Creates custom metric name-value pair and send it to controller via machine agent.
 	 * If the value is NULL or is NOT a number, it will set value as 0.
 	 */
@@ -341,7 +354,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 	/**
 	 * Synchronized method call to get Id value for threads as 
-	 * key to retreive list of mbeans to traverse.
+	 * key to retrieve list of mbeans to traverse.
 	 */
 	private synchronized Integer getDomainsMapKey(){
 		Integer threadNum = this.currentThreadId;

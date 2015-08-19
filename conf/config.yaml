@@ -11,11 +11,19 @@ jmxService:
     maxParallelConnection : 10
  
 #   
-# mbean domains to consider
+# mbean domains to consider, for CloudFoudry it should only be org.cloudfoundry
 #
 
 domains:
  - org.cloudfoundry
+
+#   
+# Cloud Foundry deployment values to be considered under above domains.
+# If the below list is empty, it means consider all.
+#
+
+deployments:
+ - untitled_dev
 
 #
 # Based on this parameter, it will be decided whether to fetch the specified jobs/attributes OR ignore the specified jobs/attributes
