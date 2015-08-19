@@ -36,7 +36,7 @@ Note : Please make sure to not use tab (\t) while editing yaml files. You may wa
 
 3. Configure the jobs and attributes required (or to be ignored) in config.yaml file.
 
-4. The metric path will be like 'Custom Metrics|CF|<job-name>|<index>|<attribute-name>'
+4. The metric path will be like 'Custom Metrics|CF|$job-name|$index|$attribute-name'
 
 5. Sample config.yaml file is available in <MACHINE_AGENT_HOME>/monitors/CloudFoundryMonitor/
 
