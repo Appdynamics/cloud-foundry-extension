@@ -27,12 +27,12 @@
 	</appender>
 
     <logger name="com.singularity" additivity="false">
-        <level value="info"/>
+        <level value="debug"/>
         <appender-ref ref="FileAppender"/>
     </logger>
 	
 	<logger name="com.appdynamics.extensions.cloudfoundry" additivity="false">
-	   <level value="info"/>
+	   <level value="debug"/>
 	   <appender-ref ref="RollingFileAppender"/>
     </logger>
 	
