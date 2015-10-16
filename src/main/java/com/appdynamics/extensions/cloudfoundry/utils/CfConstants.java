@@ -10,6 +10,8 @@ public interface CfConstants {
 	public static final String JOB = "job";
 	public static final String INDEX = "index";
 	public static final String DEPLOYMENT = "deployment";
+	public static final String IP = "ip";
+	public static final String IP_UNDEFINED = "undefined";
 	
 
 }

@@ -272,8 +272,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 		String job = mbeanObj.getKeyProperty(CfConstants.JOB);
 		String index = mbeanObj.getKeyProperty(CfConstants.INDEX);
+		String ip = mbeanObj.getKeyProperty(CfConstants.IP);
+		
+		if(ip == null || ip.equals("null"))
+			ip = CfConstants.IP_UNDEFINED;
 
-		logger.debug("Mbean domain = {}, job = {}, index = {} ", mbeanObj, job, index);
+		logger.debug("Mbean domain = {}, job = {}, index = {} , ip = {}", mbeanObj, job, index, ip);
 
 		if(job == null || index == null){
 			logger.error("Job [{}] or Index [{}] values are null in the mbean {}", job, index, mbeanObj);
@@ -317,10 +321,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						String attrName = attr.getName();
 						Object attrValue = attr.getValue();
 						
+						attrName = attrName.replaceAll(",", ";");
+						
 						if (attrValue != null && attrValue instanceof Number) {
 							logger.debug("JMX Attribute fetched as {} = {}", attrName, attrValue);
 							
-							String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + attrName;
+							String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + ip + "|" + attrName;
 							String metricValue = CfUtility.convertMetricValuesToString(attrValue);
 
 							logger.debug(metricPath + " = " + metricValue);
