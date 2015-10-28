@@ -52,6 +52,18 @@ default-value="monitors/CloudFoundryMonitor/config.yaml"
  
 3. Make sure that in every node, the <MACHINE_AGENT_HOME>/monitors/CloudFoundryMonitor/config.yaml should emit the same metric path, so that metrics reported by each of the nodes are aggregated at tier level.
  
+### System Properties added for PCF Service Broker
+
+1. extension.pcf.jmx.serviceURL
+
+2. extension.pcf.jmx.username
+
+3. extension.pcf.jmx.password
+
+4. extension.pcf.jmx.authenticate
+
+5. extension.pcf.jmx.maxParallelConnection
+ 
 ### Contributing
  
 Find out more in the [AppSphere](http://community.appdynamics.com/t5/AppDynamics-eXchange/Cloud-Foundry-Monitoring-Extension/idi-p/9428) community.
