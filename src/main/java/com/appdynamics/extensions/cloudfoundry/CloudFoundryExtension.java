@@ -1,28 +1,5 @@
 package com.appdynamics.extensions.cloudfoundry;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.management.Attribute;
-import javax.management.AttributeList;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.appdynamics.extensions.cloudfoundry.conf.Configuration;
 import com.appdynamics.extensions.cloudfoundry.model.JmxConnectorObject;
 import com.appdynamics.extensions.cloudfoundry.utils.CfConstants;
@@ -32,6 +9,17 @@ import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.management.*;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author ashish mehta
@@ -87,6 +75,8 @@ public class CloudFoundryExtension extends AManagedMonitor{
 					Configuration config = Configuration.read(confFile);
 					if (config != null) {
 						this.config = config;
+						config.overrideWithSystemProperties();
+						logger.info("JMX Settings " + config.getJmxService());
 						this.maxThreads = config.getJmxService().getMaxParallelConnection();
 						try{
 							this.jmxServiceUrl =  new JMXServiceURL(config.getJmxService().getJmxServiceUrl());

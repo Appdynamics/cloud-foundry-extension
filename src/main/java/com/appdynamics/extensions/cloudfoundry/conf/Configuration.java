@@ -1,16 +1,16 @@
 package com.appdynamics.extensions.cloudfoundry.conf;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.List;
-
+import com.appdynamics.extensions.cloudfoundry.model.JmxServiceObject;
+import com.appdynamics.extensions.cloudfoundry.utils.CfConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-import com.appdynamics.extensions.cloudfoundry.model.JmxServiceObject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.List;
 
 /**
  * @author ashish.mehta
@@ -95,7 +95,25 @@ public class Configuration {
         }
         return null;
     }
-	
+
+	/**
+	 * This method will override the properties which are loaded from the config file with the settings passed to the machine agent during invocation
+	 */
+	public void overrideWithSystemProperties() {
+		if(jmxService != null) {
+			jmxService.setJmxServiceUrl(System.getProperty(CfConstants.PROP_JMX_SERVICE_URL, jmxService.getJmxServiceUrl()));
+			jmxService.setUsername(System.getProperty(CfConstants.PROP_JMX_USERNAME, jmxService.getUsername()));
+			jmxService.setPassword(System.getProperty(CfConstants.PROP_JMX_PASSWORD, jmxService.getPassword()));
+
+			try {
+				jmxService.setAuthenticate(Integer.parseInt(System.getProperty(CfConstants.PROP_JMX_AUTHENTICATE, jmxService.getAuthenticate().toString())));
+				jmxService.setMaxParallelConnection(Integer.parseInt(System.getProperty(CfConstants.PROP_JMX_CONNECTIONS, jmxService.getMaxParallelConnection().toString())));
+			} catch (NumberFormatException exception) {
+				logger.info("Error in parsing Authenticate and Max Parallel Connection, using the settings in the config file");
+			}
+		}
+	}
+
 	@Override
 	public String toString(){
 		return  "Configuration{jmxService=" + this.jmxService +
