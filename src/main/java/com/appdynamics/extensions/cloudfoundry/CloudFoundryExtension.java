@@ -195,6 +195,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 					this.startThreads = false;
 					logger.debug("No Cloud Foundry Deployments/Jobs found to be monitored. Please check required/ignored deployments/jobs section in config.yaml");
 				}
+				this.jmxConnectionClose(jmxConn);
 			}
 		}catch(Exception ex){
 			logger.error("Exception Occurred", ex);			
