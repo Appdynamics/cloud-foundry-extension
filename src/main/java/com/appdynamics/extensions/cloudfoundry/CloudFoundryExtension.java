@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
  *
  * This extension pulls Cloud Foundary Pivotal metrics via JMS service call 
  * to post them to AppD controller via machine agent
- * 
+ *
  */
 public class CloudFoundryExtension extends AManagedMonitor{
 
@@ -53,7 +53,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 * This method is called by machine agent periodically (every minute)
 	 * - Populates the mbeans into map only once during initialization
 	 * - Creates and starts a thread pool to fetch attributes-values for mbeans in map.
-	 * 
+	 *
 	 */
 	public TaskOutput execute(Map<String, String> argsMap, TaskExecutionContext executionContext) throws TaskExecutionException {
 
@@ -81,13 +81,13 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						try{
 							this.jmxServiceUrl =  new JMXServiceURL(config.getJmxService().getJmxServiceUrl());
 						}catch(Exception exp){
-							logger.error("Error occured while connecting to JMXServiceUrl", exp); 		
+							logger.error("Error occured while connecting to JMXServiceUrl", exp);
 							out = new TaskOutput("Error occured while connecting to JMXServiceUrl.");
 						}
 						this.populateMbeanDomains();
 						this.initialized = true;
 					} else {
-						logger.error("Config could not be loaded, exiting program");         	
+						logger.error("Config could not be loaded, exiting program");
 					}
 				}
 			}catch(Exception exp){
@@ -116,12 +116,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 * Adds required (or other than to be ignored) mbeans into map.
 	 * Map has keys as integer and values as List of mbeans
 	 * Each list is traversed by a thread to fetch attributes and values for the mbeans
-	 * 
+	 *
 	 */
-	private void populateMbeanDomains(){	
+	private void populateMbeanDomains(){
 		Integer maxConnections = this.config.getJmxService().getMaxParallelConnection();
 
-		try{			
+		try{
 			if (this != null){
 				JmxConnectorObject jmxConn = this.jmxOpenConnection();
 
@@ -145,12 +145,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 								if(config.getDeployments() != null && config.getDeployments().size() > 0){
 									if(!config.getDeployments().contains(deploymentValue)){
 										logger.debug("deployment value = {} not found in config, mbean = {}", deploymentValue, mbeanObject.toString());
-									    continue;
+										continue;
 									}else{
 										logger.debug("deployment value = {} found in config, mbean = {}", deploymentValue, mbeanObject.toString());
 									}
 								}
-								
+
 								String jobValue = mbeanObject.getKeyProperty(CfConstants.JOB);
 								if(config.getRequiredOrIgnored() == CfConstants.REQUIRED){
 									if(!config.getJobs().contains(jobValue)){
@@ -162,7 +162,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 										logger.debug("Ignoring mbean object = {} with job = {}", mbeanObject.toString(), jobValue);
 										continue;
 									}
-								}								
+								}
 
 								List<ObjectName> domainsList = mbeanDomains.get(conNum);
 								if(domainsList == null){
@@ -179,15 +179,16 @@ public class CloudFoundryExtension extends AManagedMonitor{
 							}
 						}
 					}
-				}	
+				}
 
 				if(mbeanDomains.isEmpty()){
 					this.startThreads = false;
 					logger.debug("No Cloud Foundry Deployments/Jobs found to be monitored. Please check required/ignored deployments/jobs section in config.yaml");
 				}
+				this.jmxConnectionClose(jmxConn);
 			}
 		}catch(Exception ex){
-			logger.error("Exception Occurred", ex);			
+			logger.error("Exception Occurred", ex);
 		}
 	}
 
@@ -195,11 +196,11 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 * Starts a thread pool with set (or calculated) number of threads to
 	 * fetch the mbean data concurrently.
 	 * Shutdown the thread pool once all threads task is done.
-	 * 
+	 *
 	 */
 	private void startJMXThreads(){
-		
-		
+
+
 		Integer maxThreads = this.config.getJmxService().getMaxParallelConnection();
 
 		this.maxThreads = (mbeanDomains.size() > maxThreads? maxThreads : mbeanDomains.size());
@@ -224,12 +225,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 		JMXConnector jmxConnector = null;
 
 		if(this.config.getJmxService().getAuthenticate() == 1){
-			Map<String, String[]> env = new HashMap<String, String[]>();		
+			Map<String, String[]> env = new HashMap<String, String[]>();
 			String[] credentials = {this.config.getJmxService().getUsername(), this.config.getJmxService().getPassword()};
 			env.put(JMXConnector.CREDENTIALS, credentials);
 
 			jmxConnector = JMXConnectorFactory.connect(this.jmxServiceUrl, env);
-		}else 
+		}else
 			jmxConnector = JMXConnectorFactory.connect(this.jmxServiceUrl, null);
 
 		MBeanServerConnection mbsc =  jmxConnector.getMBeanServerConnection();
@@ -263,7 +264,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 		String job = mbeanObj.getKeyProperty(CfConstants.JOB);
 		String index = mbeanObj.getKeyProperty(CfConstants.INDEX);
 		String ip = mbeanObj.getKeyProperty(CfConstants.IP);
-		
+
 		if(ip == null || ip.equals("null"))
 			ip = CfConstants.IP_UNDEFINED;
 
@@ -295,7 +296,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						logger.debug("Ignoring attribute = {}", attribName);
 						continue;
 					}
-				}								
+				}
 				attribsList.add(attribName);
 			}
 
@@ -304,23 +305,23 @@ public class CloudFoundryExtension extends AManagedMonitor{
 			if(!attribsList.isEmpty()){
 				String [] attributesArray = (String [])attribsList.toArray(new String[attribsList.size()]);
 				logger.debug("mbeanObj {} and attributes {}", mbeanObj, attributesArray);
-				AttributeList attributesList = jmxConn.getMbsc().getAttributes(mbeanObj, attributesArray);	
+				AttributeList attributesList = jmxConn.getMbsc().getAttributes(mbeanObj, attributesArray);
 				if (attributesList != null && attributesList.size() > 0){
 					for(int i = 0; i< attributesList.size(); i++){
 						Attribute attr = (Attribute)attributesList.get(i);
 						String attrName = attr.getName();
 						Object attrValue = attr.getValue();
-						
+
 						attrName = attrName.replaceAll(",", ";");
-						
+
 						if (attrValue != null && attrValue instanceof Number) {
 							logger.debug("JMX Attribute fetched as {} = {}", attrName, attrValue);
-							
+
 							String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + ip + "|" + attrName;
 							String metricValue = CfUtility.convertMetricValuesToString(attrValue);
 
 							logger.debug(metricPath + " = " + metricValue);
-							this.printMetric(metricPath, metricValue);							
+							this.printMetric(metricPath, metricValue);
 						}else
 							logger.debug("JMX Attribute[{}={}] fetched having value null or not a number", attrName, attrValue);
 					}
@@ -357,7 +358,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 		if(this.currentThreadId == this.maxThreads){
 			this.currentThreadId = 1;
-		}else 
+		}else
 			this.currentThreadId++;
 
 		return threadNum;
@@ -419,12 +420,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 				logger.error("Exception occurred", e);
 			} finally{
 				cfExt.jmxConnectionClose(jmxConn);
-			}	
+			}
 			logger.debug("Finishing thread = {} at time = {}", Thread.currentThread().getName(), new Date(System.currentTimeMillis()));
-		}		
+		}
 	}
 
-	public static void main(String[] args) {	
+	public static void main(String[] args) {
 		CloudFoundryExtension cfExt = new CloudFoundryExtension();
 		try{
 			File confFile = CfUtility.getConfigFile(args[0]);
@@ -437,11 +438,11 @@ public class CloudFoundryExtension extends AManagedMonitor{
 					try{
 						cfExt.jmxServiceUrl =  new JMXServiceURL(config.getJmxService().getJmxServiceUrl());
 					}catch(Exception exp){
-						logger.error("Error occured while connecting to JMXServiceUrl", exp); 		
+						logger.error("Error occured while connecting to JMXServiceUrl", exp);
 					}
 					cfExt.populateMbeanDomains();
 				} else {
-					logger.error("Config could not be loaded, exiting program");         	
+					logger.error("Config could not be loaded, exiting program");
 				}
 				if(cfExt.startThreads){
 					while(true){
