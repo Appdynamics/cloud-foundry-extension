@@ -130,10 +130,10 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 */
 	private void populateMbeanDomains(){	
 		Integer maxConnections = this.config.getJmxService().getMaxParallelConnection();
-
+		JmxConnectorObject jmxConn = null;
 		try{			
 			if (this != null){
-				JmxConnectorObject jmxConn = this.jmxOpenConnection();
+				jmxConn = this.jmxOpenConnection();
 
 				MBeanServerConnection mbsc = jmxConn.getMbsc();
 				String[] names = mbsc.getDomains();
@@ -195,10 +195,11 @@ public class CloudFoundryExtension extends AManagedMonitor{
 					this.startThreads = false;
 					logger.debug("No Cloud Foundry Deployments/Jobs found to be monitored. Please check required/ignored deployments/jobs section in config.yaml");
 				}
-				this.jmxConnectionClose(jmxConn);
 			}
 		}catch(Exception ex){
 			logger.error("Exception Occurred", ex);			
+		}finally{
+			this.jmxConnectionClose(jmxConn);
 		}
 	}
 
