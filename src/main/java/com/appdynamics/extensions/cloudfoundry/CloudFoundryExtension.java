@@ -260,7 +260,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 * If the value is NULL or is NOT a number, it will set value as 0.
 	 */
 	public void getMbeanMetric(JmxConnectorObject jmxConn, ObjectName mbeanObj) throws Exception{
-
+                String deployment = mbeanObj.getKeyProperty(CfConstants.DEPLOYMENT);
 		String job = mbeanObj.getKeyProperty(CfConstants.JOB);
 		String index = mbeanObj.getKeyProperty(CfConstants.INDEX);
 		String ip = mbeanObj.getKeyProperty(CfConstants.IP);
@@ -317,7 +317,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						if (attrValue != null && attrValue instanceof Number) {
 							logger.debug("JMX Attribute fetched as {} = {}", attrName, attrValue);
 
-							String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + ip + "|" + attrName;
+							String metricPath = this.config.getMetricPrefix() + deployment + "|" + job + "|" + index + "|" + ip + "|" + attrName;
 							String metricValue = CfUtility.convertMetricValuesToString(attrValue);
 
 							logger.debug(metricPath + " = " + metricValue);
