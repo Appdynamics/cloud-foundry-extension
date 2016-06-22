@@ -4,7 +4,7 @@
 #
 
 jmxService:
-    jmxServiceUrl : service:jmx:rmi:///jndi/rmi://localhost:8686/jmxrmi
+    jmxServiceUrl : service:jmx:rmi:///jndi/rmi://localhost:44444/jmxrmi
     authenticate : 1
     username : admin
     password : admin
@@ -19,49 +19,117 @@ domains:
 
 #   
 # Cloud Foundry deployment values to be considered under above domains.
-# If the below list is empty, it means consider all.
+# 1 = required, 0 = ignored (applied only on names NOT matchedPatterns)
+# If there is no match pattern then comment out deploymentsMatchPatterns section
+# For multiple domains matching the same pattern, substituteName will be suffixed with "-Number", like -1, -2 etc
+# If substituteName is not provided any value, then no name substitution and exact name will be taken as it is.
 #
 
-deployments:
- - untitled_dev
+deploymentsConfig:
+
+   requiredOrIgnoredDeployments : 1
+
+   deploymentNames:
+      - untitled_dev
+
+   deploymentsMatchPatterns:
+       - pattern: cf.*
+         substituteName: cf
+
+       - pattern: p-mysql.*
+         substituteName: p-mysql
+
+       #- pattern: .*
+       #  substituteName:
+
 
 #
-# Based on this parameter, it will be decided whether to fetch the specified jobs/attributes OR ignore the specified jobs/attributes
-# 1 = required, 0 = ignored
+# Based on this parameter, it will be decided whether to fetch the specified jobs OR ignore the specified jobs
+# 
 #
 
-requiredOrIgnored : 1
+
 
 #
 # JMX mbeans objects Cloud Foundry jobs required/ignored
-#
+# 1 = required, 0 = ignored (applied only on names NOT matchedPatterns)
+# If there is no match pattern then comment out jobMatchPatterns section
+# For multiple Jobs matching the same pattern, substituteName will be suffixed with "-Number", like -1, -2 etc
+# If substituteName is not provided any value, then no name substitution and exact name will be taken as it is.
+# 
 
-jobs:
-- etcd_and_metrics
-- CloudController
+jobsConfig:
+
+    requiredOrIgnoredJobs : 1
+
+    jobNames:
+      - etcd_and_metrics
+      - CloudController
+
+    jobMatchPatterns:
+       - pattern: ccdb-partition.*
+         substituteName: ccdb-partition
+
+       - pattern: cf-mysql-broker-partition.*
+         substituteName: cf-mysql-broker-partition
+
+       - pattern: cloud_controller-partition.*
+         substituteName: cloud_controller-partition
+
+       - pattern: consoledb-partition.*
+         substituteName: consoledb-partition
+
+       - pattern: cloud_controller_worker-partition.*
+         substituteName: 
+
+
 
 #
 # JMX Attributes required/ignored
+# 1 = required, 0 = ignored (applied only on names NOT matchedPatterns)
+# If there is no match pattern then comment out attributesMatchPatterns section
 #
 
-attributes:
-- system.disk.ephemeral.percent
-- system.mem.kb
-- system.disk.ephemeral.inode_percent
-- uptime_in_seconds
-- cpu_load_avg
-- cc.http_status.3XX
-- log_count[level=warn]
+attributesConfig:
+
+    requiredOrIgnoredAttributes : 1
+
+    attributeNames:
+      - system.disk.ephemeral.percent
+      - system.healthy
+      - system.mem.kb
+      - system.disk.ephemeral.inode_percent
+      - uptime_in_seconds
+      - cpu_load_avg
+      - cc.http_status.3XX
+      - log_count[level=warn]
+
+    attributesMatchPatterns:
+      #- pattern: .*
+
+#
+# Metric rollup and aggregation types
+# aggregationType options = AVERAGE, SUM, OBSERVATION
+# timeRollupType options = AVERAGE, SUM, CURRENT
+# clusterRollupType options = COLLECTIVE, INDIVIDUAL
+#
+# Doc link = https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
+#
+
+aggregationType: AVERAGE
+timeRollupType: AVERAGE
+clusterRollupType: INDIVIDUAL
+ 
 
 #
 #prefix used to show up metrics in AppDynamics
 #
 
-metricPrefix:  "Custom Metrics|CF|"
+metricPrefix:  "Custom Metrics|PCF|"
 
 
 #
 # Frequency in Minutes at which the configurations will be read again
 #
 
-domainRefreshTimeInMins: 10
+domainRefreshTimeInMins: 60

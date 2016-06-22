@@ -21,11 +21,13 @@ public class Configuration {
 	public static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 	
 	private JmxServiceObject jmxService;
-	private List<String> attributes;
-	private List<String> jobs;
 	private List<String> domains;
-	private List<String> deployments;
-	private Integer requiredOrIgnored;
+	private DeploymentsConfig deploymentsConfig;
+	private JobsConfig jobsConfig;
+	private AttributesConfig attributesConfig;
+	private String aggregationType = "AVERAGE";
+	private String timeRollupType = "AVERAGE";
+	private String clusterRollupType = "INDIVIDUAL";
 	private String metricPrefix;
 	private Integer domainRefreshTimeInMins;
 	
@@ -35,35 +37,35 @@ public class Configuration {
 	public void setJmxService(JmxServiceObject jmxService) {
 		this.jmxService = jmxService;
 	}	
-	public List<String> getAttributes() {
-		return attributes;
-	}
-	public void setAttributes(List<String> attributes) {
-		this.attributes = attributes;
-	}
-	public List<String> getJobs() {
-		return jobs;
-	}
-	public void setJobs(List<String> jobs) {
-		this.jobs = jobs;
-	}
 	public List<String> getDomains() {
 		return domains;
 	}
 	public void setDomains(List<String> domains) {
 		this.domains = domains;
 	}
-	public List<String> getDeployments() {
-		return deployments;
+	public DeploymentsConfig getDeploymentsConfig() {
+		return deploymentsConfig;
 	}
-	public void setDeployments(List<String> deployments) {
-		this.deployments = deployments;
+	public void setDeploymentsConfig(DeploymentsConfig deploymentsConfig) {
+		this.deploymentsConfig = deploymentsConfig;
 	}
-	public Integer getRequiredOrIgnored() {
-		return requiredOrIgnored;
+	public String getAggregationType() {
+		return aggregationType;
 	}
-	public void setRequiredOrIgnored(Integer requiredOrIgnored) {
-		this.requiredOrIgnored = requiredOrIgnored;
+	public void setAggregationType(String aggregationType) {
+		this.aggregationType = aggregationType;
+	}
+	public String getTimeRollupType() {
+		return timeRollupType;
+	}
+	public void setTimeRollupType(String timeRollupType) {
+		this.timeRollupType = timeRollupType;
+	}
+	public String getClusterRollupType() {
+		return clusterRollupType;
+	}
+	public void setClusterRollupType(String clusterRollupType) {
+		this.clusterRollupType = clusterRollupType;
 	}
 	public String getMetricPrefix() {
 		return metricPrefix;
@@ -77,7 +79,18 @@ public class Configuration {
 	public void setDomainRefreshTimeInMins(Integer domainRefreshTimeInMins) {
 		this.domainRefreshTimeInMins = domainRefreshTimeInMins;
 	}
-	
+	public JobsConfig getJobsConfig() {
+		return jobsConfig;
+	}
+	public void setJobsConfig(JobsConfig jobsConfig) {
+		this.jobsConfig = jobsConfig;
+	}
+	public AttributesConfig getAttributesConfig() {
+		return attributesConfig;
+	}
+	public void setAttributesConfig(AttributesConfig attributesConfig) {
+		this.attributesConfig = attributesConfig;
+	}
 	public static Configuration read() {
         File conf = new File("conf", "config.yaml");
         return read(conf);
@@ -99,11 +112,13 @@ public class Configuration {
 	@Override
 	public String toString(){
 		return  "Configuration{jmxService=" + this.jmxService +
-				",attributes=" + this.attributes +
-				",jobs=" + this.jobs +
 				",domains=" + this.domains +
-				",deployments=" + this.deployments +
-				",requiredOrIgnored=" + this.requiredOrIgnored +
+                ",deploymentsConfig=" + this.deploymentsConfig +
+				",jobsConfig=" + this.jobsConfig +
+				",attributesConfig=" + this.attributesConfig +
+				",aggregationType=" + this.aggregationType +
+				",timeRollupType=" + this.timeRollupType +
+				",clusterRollupType=" + this.clusterRollupType +
 				",domainRefreshTimeInMins=" + this.domainRefreshTimeInMins +
 				",metricPrefix=" + this.metricPrefix + "}";
 				 

@@ -1,6 +1,8 @@
 package com.appdynamics.extensions.cloudfoundry.utils;
 
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.appdynamics.extensions.PathResolver;
 import com.google.common.base.Strings;
@@ -43,5 +45,17 @@ public class CfUtility {
 		
 		return new File(configFileName);
 	}
+	
+	public static boolean isRegexMatched(String pattern, String text) {
+
+        Pattern regexPattern = Pattern.compile(pattern);
+        Matcher regexMatcher = regexPattern.matcher(text);
+
+        while (regexMatcher.matches()) {
+            return true;
+        }
+
+        return false;
+    }
 
 }

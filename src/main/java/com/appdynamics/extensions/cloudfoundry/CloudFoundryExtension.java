@@ -7,8 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -24,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.appdynamics.extensions.cloudfoundry.conf.Configuration;
+import com.appdynamics.extensions.cloudfoundry.conf.MatchPatternConfig;
 import com.appdynamics.extensions.cloudfoundry.model.JmxConnectorObject;
 import com.appdynamics.extensions.cloudfoundry.utils.CfConstants;
 import com.appdynamics.extensions.cloudfoundry.utils.CfUtility;
@@ -47,13 +50,16 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	private Configuration config;
 	private JMXServiceURL jmxServiceUrl;
 	private ExecutorService executorService;
-
-	private Map<Integer, List<ObjectName>> mbeanDomains;
+	
 	private Integer currentThreadId = 1;
 	private Integer maxThreads = 0;
 	private boolean startThreads = true;
 	private volatile boolean initialized = false;
 	private boolean refreshThreadStarted = false;
+
+	private Map<Integer, List<ObjectName>> mbeanDomains;
+	private static Map<String, Integer> substituteVsNameCountMap = new ConcurrentHashMap<String, Integer>();
+	private static Map<String, String> regexMatchedNameVsSubstituteNameMap = new ConcurrentHashMap<String, String>();
 
 	public CloudFoundryExtension (){
 		String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
@@ -79,6 +85,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 		TaskOutput out = null;
 
 		if(!this.initialized){
+			logger.info("CloudFoundary JMX initializing....");
 			try{
 				File confFile = CfUtility.getConfigFile(argsMap.get(CfConstants.CONFIG_FILE));
 				logger.info("Conf File location = {}", confFile);
@@ -93,9 +100,16 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						}catch(Exception exp){
 							logger.error("Error occured while connecting to JMXServiceUrl", exp); 		
 							out = new TaskOutput("Error occured while connecting to JMXServiceUrl.");
+							return out;
 						}
-						this.populateMbeanDomains();
-						this.initialized = true;
+						if(this.populateMbeanDomains()){
+							this.initialized = true;
+							out = new TaskOutput("CloudFoundary JMX Initilization successful.");
+							logger.info("CloudFoundary JMX Initilization successful....");
+						}else{
+							out = new TaskOutput("CloudFoundary JMX Initilization failed.");
+							logger.info("CloudFoundary JMX Initilization failed....");
+						}
 					} else {
 						logger.error("Config could not be loaded, exiting program");         	
 					}
@@ -105,9 +119,10 @@ public class CloudFoundryExtension extends AManagedMonitor{
 				out = new TaskOutput("Error occurred while executing task");
 				return out;
 			}
-			out = new TaskOutput("Cloud Foundary JMX Initilization successful.");
+			
 		}else{
-			out = new TaskOutput("Cloud Foundary JMX already initialized.");
+			logger.info("CloudFoundary JMX already initialized....");
+			out = new TaskOutput("CloudFoundary JMX already initialized.");
 		}
 
 		if(this.startThreads){
@@ -128,7 +143,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 * Each list is traversed by a thread to fetch attributes and values for the mbeans
 	 * 
 	 */
-	private void populateMbeanDomains(){	
+	private boolean populateMbeanDomains(){	
 		Integer maxConnections = this.config.getJmxService().getMaxParallelConnection();
 		JmxConnectorObject jmxConn = null;
 		try{			
@@ -152,23 +167,31 @@ public class CloudFoundryExtension extends AManagedMonitor{
 								ObjectName mbeanObject = (ObjectName)mxbeanName;
 
 								String deploymentValue = mbeanObject.getKeyProperty(CfConstants.DEPLOYMENT);
-								if(config.getDeployments() != null && config.getDeployments().size() > 0){
-									if(!config.getDeployments().contains(deploymentValue)){
-										logger.debug("deployment value = {} not found in config, mbean = {}", deploymentValue, mbeanObject.toString());
-									    continue;
-									}else{
-										logger.debug("deployment value = {} found in config, mbean = {}", deploymentValue, mbeanObject.toString());
+								
+								logger.debug("deploymentValue: {}", deploymentValue);
+								
+								if(config.getDeploymentsConfig().getRequiredOrIgnoredDeployments() == CfConstants.REQUIRED){
+									if(!config.getDeploymentsConfig().getDeploymentNames().contains(deploymentValue) && !isRegexPatternMatch(config.getDeploymentsConfig().getDeploymentsMatchPatterns(), deploymentValue)){
+										logger.debug("Not required mbean = {} with deployment = {}", mbeanObject.toString(), deploymentValue);
+										continue;
+									}
+								}else{
+									if(config.getDeploymentsConfig().getDeploymentNames().contains(deploymentValue)){
+										logger.debug("Ignoring mbean object = {} with deployment = {}", mbeanObject.toString(), deploymentValue);
+										continue;
 									}
 								}
+
 								
 								String jobValue = mbeanObject.getKeyProperty(CfConstants.JOB);
-								if(config.getRequiredOrIgnored() == CfConstants.REQUIRED){
-									if(!config.getJobs().contains(jobValue)){
+								
+								if(config.getJobsConfig().getRequiredOrIgnoredJobs() == CfConstants.REQUIRED){
+									if(!config.getJobsConfig().getJobNames().contains(jobValue) && !isRegexPatternMatch(config.getJobsConfig().getJobMatchPatterns(), jobValue)){
 										logger.debug("Not required mbean = {} with job = {}", mbeanObject.toString(), jobValue);
 										continue;
 									}
-								}else if(config.getRequiredOrIgnored() == CfConstants.TO_BE_IGNORED){
-									if(config.getJobs().contains(jobValue)){
+								}else{
+									if(config.getJobsConfig().getJobNames().contains(jobValue)){
 										logger.debug("Ignoring mbean object = {} with job = {}", mbeanObject.toString(), jobValue);
 										continue;
 									}
@@ -193,24 +216,89 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 				if(mbeanDomains.isEmpty()){
 					this.startThreads = false;
-					logger.debug("No Cloud Foundry Deployments/Jobs found to be monitored. Please check required/ignored deployments/jobs section in config.yaml");
+					logger.debug("No CloudFoundry Deployments/Jobs found to be monitored. Please check required/ignored deployments/jobs section in config.yaml");
 				}
 			}
+			return true;
 		}catch(Exception ex){
-			logger.error("Exception Occurred", ex);			
+			logger.error("Exception Occurred", ex);	
+			return false;
 		}finally{
 			this.jmxConnectionClose(jmxConn);
 		}
 	}
+	
+	/**
+	 * Matches the input text with the given match patterns
+	 * 
+	 * @param matchPatterns
+	 * @param text
+	 * @return boolean
+	 */
+	private static boolean isRegexPatternMatch(List<MatchPatternConfig> matchPatterns, String text){
+		if(matchPatterns == null || matchPatterns.isEmpty())
+			return false;
+         
+		boolean matched = false;
+		for(MatchPatternConfig matchPatternConfig : matchPatterns){
+			if (CfUtility.isRegexMatched(matchPatternConfig.getPattern(), text)){
+				matched = true;
+				break;
+			}
+		}
+		return matched;
+	}
+	
+	/**
+	 * Returns the name for the given text based on the match patterns
+	 * If given text doesn't match return the text itself
+	 * If given text matches:
+	 *    - fetch the name from regexMatchedNameVsSubstitutedNameMap if available
+	 *    - if not available then name would be substituteName (or substituteName-count)
+	 *    - count as per substituteVsNameCountMap
+	 * 
+	 * @param matchPatterns
+	 * @param text
+	 * @return RegexMatchedName
+	 */
+	private static String regexPatternMatchedName(List<MatchPatternConfig> matchPatterns, String text){
+		if(matchPatterns == null || matchPatterns.isEmpty())
+			return text;
+		
+		String returnName = text;
+		for(MatchPatternConfig matchPatternConfig : matchPatterns){
+			if (CfUtility.isRegexMatched(matchPatternConfig.getPattern(), text)){
+				if(matchPatternConfig.getSubstituteName() != null){
+					String savedName = regexMatchedNameVsSubstituteNameMap.get(text);
+					if(savedName == null) {
+						Integer currentCount = substituteVsNameCountMap.get(matchPatternConfig.getSubstituteName());
+						if (currentCount != null){
+							savedName = matchPatternConfig.getSubstituteName() + "-" + currentCount;
+							substituteVsNameCountMap.put(matchPatternConfig.getSubstituteName(), ++currentCount);
+						}else{
+							substituteVsNameCountMap.put(matchPatternConfig.getSubstituteName(), 1);
+							savedName = matchPatternConfig.getSubstituteName();
+						}
+						returnName = savedName;
+						regexMatchedNameVsSubstituteNameMap.put(text, returnName);
+					}else{
+						returnName = savedName;
+					}
+				}
+			}
+		}
+
+		return returnName;
+		
+	}
 
 	/**
 	 * Starts a thread pool with set (or calculated) number of threads to
-	 * fetch the mbean data concurrently.
-	 * Shutdown the thread pool once all threads task is done.
+	 * fetch the mBean data concurrently.
+	 * Shutdown the thread pool once all threads tasks are done.
 	 * 
 	 */
 	private void startJMXThreads(){
-		
 		
 		Integer maxThreads = this.config.getJmxService().getMaxParallelConnection();
 
@@ -225,8 +313,18 @@ public class CloudFoundryExtension extends AManagedMonitor{
 			executorService.execute(jmxTh);
 		}
 
-		if(executorService != null)
+		if(executorService != null){
 			executorService.shutdown();
+			try{
+				if(!executorService.awaitTermination(60, TimeUnit.SECONDS)){
+					logger.debug("Tasks did not finish in 60 seconds, shutting down all threads.");
+					executorService.shutdownNow();
+				}
+			}catch(InterruptedException ie){
+					executorService.shutdownNow();
+				}
+		}
+			
 	}
 
 	/**
@@ -272,6 +370,7 @@ public class CloudFoundryExtension extends AManagedMonitor{
 	 */
 	public void getMbeanMetric(JmxConnectorObject jmxConn, ObjectName mbeanObj) throws Exception{
 
+		String deployment = mbeanObj.getKeyProperty(CfConstants.DEPLOYMENT);
 		String job = mbeanObj.getKeyProperty(CfConstants.JOB);
 		String index = mbeanObj.getKeyProperty(CfConstants.INDEX);
 		String ip = mbeanObj.getKeyProperty(CfConstants.IP);
@@ -279,12 +378,16 @@ public class CloudFoundryExtension extends AManagedMonitor{
 		if(ip == null || ip.equals("null"))
 			ip = CfConstants.IP_UNDEFINED;
 
-		logger.debug("Mbean domain = {}, job = {}, index = {} , ip = {}", mbeanObj, job, index, ip);
+		logger.debug("MbeanObject = {}, deployment = {}, job = {}, index = {} , ip = {}", mbeanObj, deployment, job, index, ip);
 
-		if(job == null || index == null){
-			logger.error("Job [{}] or Index [{}] values are null in the mbean {}", job, index, mbeanObj);
+		if(deployment == null || job == null || index == null){
+			logger.error("Deployment [{}] or Job [{}] or Index [{}] values are null in the mbean {}", deployment, job, index, mbeanObj);
 			return;
 		}
+		
+		//Replacing the names as per the config, especially for REGEX mapped names
+		deployment = regexPatternMatchedName(config.getDeploymentsConfig().getDeploymentsMatchPatterns(), deployment);
+		job = regexPatternMatchedName(config.getJobsConfig().getJobMatchPatterns(), job);
 
 		MBeanInfo mbeanInfo = jmxConn.getMbsc().getMBeanInfo(mbeanObj);
 		MBeanAttributeInfo[] mbeanAttributeInfos = mbeanInfo.getAttributes();
@@ -297,13 +400,13 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 				logger.debug("mbeanAttributeInfos[{}]  name = {}",i, attribName);
 
-				if(config.getRequiredOrIgnored() == CfConstants.REQUIRED){
-					if(!config.getAttributes().contains(attribName)){
+				if(config.getAttributesConfig().getRequiredOrIgnoredAttributes() == CfConstants.REQUIRED){
+					if(!config.getAttributesConfig().getAttributeNames().contains(attribName) && !isRegexPatternMatch(config.getAttributesConfig().getAttributesMatchPatterns(), attribName)){
 						logger.debug("Not required attribute = {}", attribName);
 						continue;
 					}
-				}else if(config.getRequiredOrIgnored() == CfConstants.TO_BE_IGNORED){
-					if(config.getAttributes().contains(attribName)){
+				}else{
+					if(config.getAttributesConfig().getAttributeNames().contains(attribName)){
 						logger.debug("Ignoring attribute = {}", attribName);
 						continue;
 					}
@@ -328,11 +431,11 @@ public class CloudFoundryExtension extends AManagedMonitor{
 						if (attrValue != null && attrValue instanceof Number) {
 							logger.debug("JMX Attribute fetched as {} = {}", attrName, attrValue);
 							
-							String metricPath = this.config.getMetricPrefix() + job + "|" + index + "|" + ip + "|" + attrName;
+							String metricPath = this.config.getMetricPrefix() + deployment + "|" + job + "|" + index + "|" + ip + "|" + attrName;
 							String metricValue = CfUtility.convertMetricValuesToString(attrValue);
 
-							logger.debug(metricPath + " = " + metricValue);
-							this.printMetric(metricPath, metricValue);							
+							logger.debug("Metric [{} = {}]", metricPath, metricValue);
+							printMetric(metricPath, metricValue, this.config.getAggregationType(), this.config.getTimeRollupType(), this.config.getClusterRollupType());				
 						}else
 							logger.debug("JMX Attribute[{}={}] fetched having value null or not a number", attrName, attrValue);
 					}
@@ -343,15 +446,9 @@ public class CloudFoundryExtension extends AManagedMonitor{
 		}
 	}
 
-	private void printMetric(String metricPath, String metricValue) {
-		printMetric(metricPath, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_OBSERVATION, MetricWriter.METRIC_TIME_ROLLUP_TYPE_CURRENT,
-				MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
-	}
-
 	private void printMetric(String metricPath, String metricValue, String aggregation, String timeRollup, String cluster) {
 		MetricWriter metricWriter = this.getMetricWriter(metricPath, aggregation, timeRollup, cluster);
 		if (metricValue != null) {
-			logger.debug("Metric [{} ={}]", metricPath, metricValue);
 			metricWriter.printMetric(metricValue);
 		}
 	}
