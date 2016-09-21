@@ -155,7 +155,11 @@ public class CloudFoundryExtension extends AManagedMonitor{
 
 				logger.debug("Domain names size {}", names.length);
 
-				mbeanDomains = new HashMap<Integer, List<ObjectName>>();
+				if (mbeanDomains == null)
+					mbeanDomains = new HashMap<Integer, List<ObjectName>>();
+				else
+					mbeanDomains.clear();
+				
 				Integer conNum = 1;
 
 				for (String domain : names) {
@@ -518,7 +522,12 @@ public class CloudFoundryExtension extends AManagedMonitor{
 					List<ObjectName> domainsList = cfExt.mbeanDomains.get(mapKey);
 					if(domainsList != null && !domainsList.isEmpty()){
 						for (ObjectName domain : domainsList){
-							cfExt.getMbeanMetric(jmxConn, domain);
+							try{
+								cfExt.getMbeanMetric(jmxConn, domain);
+							}catch(Exception e){
+								logger.error("Exception occurred during getMbeanMetric()", e);
+								continue;
+							}
 						}
 					}else{
 						logger.info("Mbeans list empty for map key {}", mapKey);
