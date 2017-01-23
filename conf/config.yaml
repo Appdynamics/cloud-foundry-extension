@@ -125,7 +125,7 @@ clusterRollupType: INDIVIDUAL
 #prefix used to show up metrics in AppDynamics
 #
 
-metricPrefix:  "Custom Metrics|PCF|"
+metricPrefix:  'Custom Metrics|PCF|'
 
 
 #
