@@ -57,7 +57,7 @@ attributes:
 #prefix used to show up metrics in AppDynamics
 #
 
-metricPrefix:  "Custom Metrics|CF|"
+metricPrefix:  'Custom Metrics|CF|'
 
 
 #
